@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Keyword Extractor | Premium Edition</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+
+    <style>
+        :root {
+            /* Light Theme Variables */
+            --primary: #4f46e5;       
+            --primary-dark: #4338ca;  
+            --accent: #f59e0b;        
+            --error: #ef4444;        
+            --text-dark: #0f172a;
+            --text-gray: #64748b;
+            --bg-paper: #f8fafc;      
+            --glass: rgba(255, 255, 255, 0.85);
+            --card-bg: #fff;
+            --border-color: #e2e8f0;
+            --chip-bg: #fff;
+            --radius: 20px; /* Scaled down slightly */
+            --shadow-soft: 0 20px 40px -10px rgba(79, 70, 229, 0.1);
+        }
+
+        /* --- ✨ NEW: DARK THEME VARIABLES --- */
+        body.dark-mode {
+            --primary: #818cf8;
+            --primary-dark: #6366f1;
+            --text-dark: #f8fafc;
+            --text-gray: #94a3b8;
+            --bg-paper: #0f172a;      
+            --glass: rgba(15, 23, 42, 0.85);
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --chip-bg: #0f172a;
+            --shadow-soft: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: var(--bg-paper);
+            color: var(--text-dark);
+            display: grid;
+            place-items: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: relative;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        /* --- ✨ UPDATED: HEADER & FOOTER WITH GLASS BACKDROP --- */
+        .app-header {
+            position: absolute;
+            top: 0; left: 0; width: 100%;
+            padding: 15px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+            background: var(--glass);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .header-brand {
+            display: flex; align-items: center; gap: 12px;
+            font-weight: 800; font-size: 1.3rem; color: var(--text-dark);
+            letter-spacing: -0.02em;
+        }
+        
+        .app-footer {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%;
+            padding: 15px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.85rem; font-weight: 600; color: var(--text-gray);
+            z-index: 100;
+            background: var(--glass);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-top: 1px solid var(--border-color);
+        }
+        .footer-links { display: flex; gap: 20px; }
+        .footer-links a { color: var(--text-gray); text-decoration: none; transition: 0.2s; }
+        .footer-links a:hover { color: var(--primary); }
+
+        /* --- FLOATING TOOLS --- */
+        .floating-tools {
+            display: flex; gap: 12px;
+        }
+        .icon-btn {
+            width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-dark);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .icon-btn:hover { color: var(--primary); transform: translateY(-3px) scale(1.05); background: var(--card-bg); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+
+        /* --- BACKGROUND ART --- */
+        .bg-pattern {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.15; 
+            background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%234f46e5' fill-rule='evenodd'%3E%3Cpath d='M10 40a2 2 0 1 1 4 0 2 2 0 0 1-4 0zM80 90a4 4 0 1 1 8 0 4 4 0 0 1-8 0z' opacity='0.5'/%3E%3Ctext x='30' y='70' font-family='Noto Sans Devanagari' font-weight='bold' font-size='16'%3Eशब्द%3C/text%3E%3Ctext x='90' y='30' font-family='Manrope' font-weight='bold' font-size='14'%3EAI%3C/text%3E%3C/g%3E%3C/svg%3E");
+        }
+        .bg-orb {
+            position: fixed; width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(255,255,255,0) 70%);
+            top: -200px; right: -200px; z-index: -1; animation: float 10s infinite ease-in-out;
+        }
+        body.dark-mode .bg-orb { background: radial-gradient(circle, rgba(79, 70, 229, 0.2) 0%, rgba(15,23,42,0) 70%); }
+
+        /* --- MAIN CARD --- */
+        .dashboard-container {
+            width: 90%; max-width: 1100px; height: 72vh; 
+            background: var(--glass); backdrop-filter: blur(24px); border-radius: var(--radius);
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: var(--shadow-soft), 0 0 0 1px rgba(255,255,255,0.1) inset;
+            display: grid; grid-template-columns: 1fr 1.2fr; overflow: hidden;
+            opacity: 0; transform: scale(0.98); animation: entrance 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        body.dark-mode .dashboard-container { border-color: var(--border-color); background: rgba(30, 41, 59, 0.6); }
+        
+        .dashboard-container::after {
+            content: ''; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 8px; 
+            background: linear-gradient(90deg, var(--primary), #ec4899, var(--accent), #8b5cf6, var(--primary));
+            background-size: 300% 100%; 
+            animation: shimmerFlow 3s linear infinite; 
+        }
+
+        @keyframes shimmerFlow {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 0%; }
+        }
+
+        .panel-left {
+            padding: 2rem; 
+            display: flex; flex-direction: column;
+            background: rgba(255,255,255,0.4); border-right: 1px solid var(--border-color);
+            position: relative;
+        }
+        body.dark-mode .panel-left { background: rgba(15, 23, 42, 0.4); }
+
+        /* --- SWITCHER --- */
+        .switch-wrapper { display: flex; justify-content: flex-start; margin-bottom: 1.5rem; }
+        .switch-container {
+            position: relative; display: inline-flex; background: var(--border-color);
+            border-radius: 999px; padding: 4px; width: fit-content;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+        }
+        .switch-input { display: none; }
+        .switch-label {
+            position: relative; z-index: 2; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.8rem; color: var(--text-gray); cursor: pointer;
+            transition: color 0.3s; user-select: none; gap: 8px; padding: 8px 20px; min-width: 100px;
+        }
+        .switch-glider {
+            position: absolute; top: 4px; left: 4px; width: calc(50% - 4px); height: calc(100% - 8px);
+            background: var(--card-bg); border-radius: 999px; z-index: 1;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        #lang-hi:checked ~ .switch-glider { transform: translateX(0%); }
+        #lang-en:checked ~ .switch-glider { transform: translateX(100%); }
+        #lang-hi:checked ~ .label-hi { color: var(--primary); }
+        #lang-en:checked ~ .label-en { color: var(--primary); }
+
+        /* --- TEXT AREA --- */
+        .input-group { position: relative; flex: 1; display: flex; flex-direction: column; }
+        .textarea-wrapper { position: relative; flex: 1; display: flex; }
+        textarea {
+            width: 100%; height: 100%; padding: 1.25rem; padding-bottom: 3.5rem;
+            border: 2px solid var(--border-color); border-radius: 12px; background: var(--card-bg); color: var(--text-dark);
+            font-family: 'Noto Sans Devanagari', sans-serif; font-size: 0.95rem; line-height: 1.6;
+            resize: none; outline: none; transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
+        }
+        textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
+        textarea.shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; border-color: var(--error); }
+
+        /* MULTI-BUTTON BASE */
+        .action-btn {
+            position: absolute; bottom: 12px; width: 38px; height: 38px;
+            border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-paper);
+            color: var(--text-gray); font-size: 1.15rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08); 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); z-index: 10;
+        }
+        .mic-btn { right: 12px; }
+        .trans-btn { right: 58px; }
+        .highlight-btn { right: 104px; }
+        .pdf-btn { right: 150px; }
+        .clear-btn { right: 196px; }
+
+        .action-btn:hover { transform: scale(1.1); color: var(--primary); border-color: var(--primary); }
+        .mic-btn.listening { background: #ef4444; color: white; border-color: #ef4444; animation: pulse 1.5s infinite; }
+        .trans-btn:hover { color: var(--accent); border-color: var(--accent); }
+        .trans-btn.loading { animation: spin 1s linear infinite; color: var(--accent); }
+        .pdf-btn:hover { color: #10b981; border-color: #10b981; }
+        .pdf-btn.loading { animation: spin 1s linear infinite; color: #10b981; }
+        .clear-btn:hover { color: #ef4444; border-color: #ef4444; }
+
+        /* --- BUTTON WITH LIQUID EFFECT --- */
+        .btn-extract {
+            margin-top: 1rem; background: var(--text-dark); color: var(--card-bg); border: none; padding: 0;
+            height: 48px; border-radius: 12px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            position: relative; overflow: hidden; transition: transform 0.1s, box-shadow 0.3s;
+        }
+        body.dark-mode .btn-extract { background: var(--primary); color: #fff; }
+        .btn-extract:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -5px rgba(67, 56, 202, 0.3); }
+        .btn-extract:active { transform: scale(0.98); }
+        .btn-extract::after {
+            content: ""; position: absolute; top: 0; left: -100%; width: 200%; height: 100%;
+            background: linear-gradient(115deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+        .btn-extract:hover::after { left: 100%; }
+
+        /* --- TOAST NOTIFICATION --- */
+        .toast-container {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: #1e293b; color: #fff; padding: 10px 20px; border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); font-weight: 600; font-size: 0.85rem;
+            display: flex; align-items: center; gap: 8px; z-index: 1000; opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .toast-container.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast-container i { color: #4ade80; font-size: 1.2rem; }
+
+        /* --- RIGHT PANEL --- */
+        .panel-right { padding: 2rem; background: rgba(0,0,0,0.02); display: flex; flex-direction: column; overflow-y: auto; }
+        body.dark-mode .panel-right { background: rgba(0,0,0,0.15); }
+
+        .card { background: var(--card-bg); border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid var(--border-color); margin-bottom: 1.25rem; opacity: 0; animation: slideIn 0.5s 0.2s forwards; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border-color); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.05em; color: var(--text-gray); text-transform: uppercase; }
+        
+        .chip-container { display: flex; flex-wrap: wrap; gap: 6px; }
+        .chip { background: var(--chip-bg); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; color: var(--text-dark); font-weight: 600; transition: all 0.2s; cursor: pointer; font-family: 'Noto Sans Devanagari', sans-serif; opacity: 0; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .chip:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15); background: rgba(79, 70, 229, 0.05); }
+        .chip:nth-child(1) { animation-delay: 0.1s; } .chip:nth-child(2) { animation-delay: 0.15s; } .chip:nth-child(3) { animation-delay: 0.2s; }
+        
+        .category-group { margin-bottom: 1.25rem; }
+        .category-title { font-size: 0.8rem; font-weight: 700; color: var(--primary); margin-bottom: 0.6rem; display: flex; align-items: center; gap: 6px; }
+
+        .empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-gray); }
+        .empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.3; }
+
+        /* --- HISTORY SIDEBAR STYLES --- */
+        .history-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(3px); z-index: 998; opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        .history-overlay.show { opacity: 1; pointer-events: all; }
+        
+        .history-sidebar {
+            position: fixed; top: 0; left: -400px; width: 380px; max-width: 90vw; height: 100vh;
+            background: var(--glass); backdrop-filter: blur(30px); border-right: 1px solid var(--border-color);
+            z-index: 999; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column; box-shadow: 20px 0 40px rgba(0,0,0,0.2);
+        }
+        .history-sidebar.open { transform: translateX(400px); }
+        
+        .hs-header { padding: 25px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .hs-header h2 { font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+        .hs-close { font-size: 1.5rem; cursor: pointer; color: var(--text-gray); transition: 0.2s; }
+        .hs-close:hover { color: var(--error); transform: rotate(90deg); }
+        
+        .hs-content { padding: 25px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .history-item {
+            padding: 16px; border-radius: 12px; background: var(--card-bg); border: 1px solid var(--border-color);
+            cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .history-item:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 16px rgba(0,0,0,0.06); }
+        .hi-time { font-size: 0.7rem; color: var(--primary); font-weight: 800; margin-bottom: 6px; letter-spacing: 0.05em; text-transform: uppercase;}
+        .hi-text { font-size: 0.9rem; line-height: 1.5; color: var(--text-dark); opacity: 0.9; }
+
+        @keyframes entrance { to { opacity: 1; transform: scale(1); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+
+        h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.2rem; background: linear-gradient(135deg, var(--text-dark) 0%, #4338ca 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        body.dark-mode h1 { background: linear-gradient(135deg, #f8fafc 0%, #818cf8 100%); -webkit-background-clip: text; background-clip: text; }
+        p.sub { font-size: 0.85rem; color: var(--text-gray); line-height: 1.4; margin-bottom: 1.2rem; }
+        
+        .error-message { color: var(--error); font-size: 0.8rem; margin-top: 8px; font-weight: 600; display: none; align-items: center; gap: 6px; }
+
+        @media (max-width: 900px) { 
+            body { overflow-y: auto; height: auto; padding: 0; display: block; }
+            .app-header { position: relative; padding: 20px; flex-direction: column; gap: 15px; }
+            .app-footer { position: relative; padding: 20px; flex-direction: column; gap: 10px; }
+            .dashboard-container { grid-template-columns: 1fr; height: auto; margin: 40px auto; } 
+            .switch-wrapper { width: 100%; } 
+        }
+
+        /* --- NEW HIGHLIGHT STYLES --- */
+        .highlight-box {
+            width: 100%; height: 100%; padding: 1.25rem; padding-bottom: 3.5rem;
+            border: 2px solid var(--border-color); border-radius: 12px; background: var(--card-bg);
+            font-family: 'Noto Sans Devanagari', sans-serif; font-size: 0.95rem; line-height: 1.6;
+            overflow-y: auto; color: var(--text-dark); position: absolute; top: 0; left: 0;
+            z-index: 5; white-space: pre-wrap; display: none;
+        }
+        mark.nlp-highlight {
+            background-color: #fef08a; color: #1e293b; padding: 2px 4px; 
+            border-radius: 4px; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-pattern"></div>
+    <div class="bg-orb"></div>
+
+    <header class="app-header">
+        <div class="header-brand">
+            <img src="/static/logo.png" alt="Logo" style="height: 42px; width: 42px; border-radius: 10px; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <span>AI Keyword Extractor <span style="font-weight: 500; opacity: 0.5;">| PRO</span></span>
+        </div>
+        
+        <div class="floating-tools">
+            <button class="icon-btn" id="historyBtn" title="View Recent Extractions" onclick="toggleSidebar(true)">
+                <i class="ph-bold ph-clock-counter-clockwise"></i>
+            </button>
+            <button class="icon-btn" id="themeBtn" title="Toggle Dark Mode" onclick="toggleTheme()">
+                <i class="ph-bold ph-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="history-overlay" id="historyOverlay" onclick="toggleSidebar(false)"></div>
+    <div class="history-sidebar" id="historySidebar">
+        <div class="hs-header">
+            <h2><i class="ph-fill ph-book-bookmark"></i> Session History</h2>
+            <i class="ph-bold ph-x hs-close" onclick="toggleSidebar(false)"></i>
+        </div>
+        <div class="hs-content" id="historyContent">
+            </div>
+    </div>
+
+    <div id="toast" class="toast-container">
+        <i class="ph-fill ph-check-circle"></i>
+        <span id="toastMsg">Keywords copied!</span>
+    </div>
+
+    <div class="dashboard-container">
+        
+        <div class="panel-left">
+            
+            <form id="langForm" class="switch-wrapper">
+                <div class="switch-container">
+                    <input type="radio" id="lang-hi" name="language" class="switch-input" value="hi" {% if selected_lang == 'hi' %}checked{% endif %} onclick="setLanguage('hi')">
+                    <input type="radio" id="lang-en" name="language" class="switch-input" value="en" {% if selected_lang == 'en' %}checked{% endif %} onclick="setLanguage('en')">
+                    
+                    <div class="switch-glider"></div>
+                    
+                    <label for="lang-hi" class="switch-label label-hi">
+                        <i class="ph-bold ph-translate"></i> Hindi
+                    </label>
+                    <label for="lang-en" class="switch-label label-en">
+                        <i class="ph-bold ph-globe"></i> English
+                    </label>
+                </div>
+            </form>
+
+            <div class="header">
+                <h1 id="mainTitle">
+                    {{ "English Keyword AI" if selected_lang == 'en' else "Hindi Keyword Extractor" }}
+                </h1>
+                
+                <p class="sub" id="subTitle">
+                    {% if selected_lang == 'en' %}
+                        Extract core topics and nouns from English text with high precision.
+                    {% else %}
+                        Advanced NLP engine for extracting core topics from Hindi (Devanagari) text with semantic precision.
+                    {% endif %}
+                </p>
+            </div>
+
+            <form method="POST" id="keywordForm" onsubmit="return validateAndSubmit(event)" style="flex:1; display:flex; flex-direction:column;">
+                <input type="hidden" id="formLang" name="language" value="{{ selected_lang }}">
+                
+                <div class="input-group">
+                    <div class="textarea-wrapper">
+                        <textarea id="sourceText" name="text" spellcheck="false"
+                            placeholder="{{ 'Paste English text here for analysis...' if selected_lang == 'en' else 'विश्लेषण के लिए यहाँ हिंदी टेक्स्ट पेस्ट करें...' }}">{{ text }}</textarea>
+                        
+                        <div id="highlightBox" class="highlight-box"></div>
+
+                        <input type="file" id="pdfInput" accept="application/pdf" style="display: none;">
+                        
+                        <button type="button" id="clearBtn" class="action-btn clear-btn" title="Clear Text" onclick="clearText()">
+                            <i class="ph-bold ph-eraser"></i>
+                        </button>
+
+                        <button type="button" id="pdfBtn" class="action-btn pdf-btn" title="Upload PDF">
+                            <i class="ph-bold ph-file-pdf"></i>
+                        </button>
+
+                        <button type="button" id="highlightBtn" class="action-btn highlight-btn" title="Highlight Keywords" onclick="toggleHighlight()">
+                            <i class="ph-bold ph-highlighter"></i>
+                        </button>
+
+                        <button type="button" id="transBtn" class="action-btn trans-btn" title="Translate Text">
+                            <i class="ph-bold ph-translate"></i>
+                        </button>
+
+                        <button type="button" id="micBtn" class="action-btn mic-btn" title="Speak to Type">
+                            <i class="ph-bold ph-microphone"></i>
+                        </button>
+                    </div>
+
+                    <div id="clientError" class="error-message">
+                        <i class="ph-fill ph-warning-circle"></i> <span id="errorText">Error</span>
+                    </div>
+
+                    {% if error %}
+                    <div class="error-message" style="display:flex;">
+                        <i class="ph-fill ph-warning-circle"></i> {{ error }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn-extract" id="submitBtn">
+                    <div class="btn-content">
+                        <span id="btnText"><i class="ph-bold ph-lightning"></i> Extract Keywords</span>
+                        <span id="loader" style="display:none;"><i class="ph-bold ph-spinner ph-spin"></i> Processing...</span>
+                    </div>
+                </button>
+            </form>
+        </div>
+
+        <div class="panel-right" id="rightPanel">
+            {% if not cleaned_text and not keywords and not error %}
+            <div class="empty-state">
+                <i class="ph-duotone ph-article empty-icon"></i>
+                <h3>Ready to Analyze</h3>
+                <p>Select a language and paste text to begin.</p>
+            </div>
+            {% endif %}
+
+            {% if cleaned_text and not error %}
+            <div class="card">
+                <div class="card-header">
+                    <span><i class="ph-bold ph-magic-wand"></i> Cleaned Context</span>
+                </div>
+                <div style="font-family: 'Noto Sans Devanagari'; line-height: 1.6; font-size: 0.9rem;">
+                    {{ cleaned_text }}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if keywords and not error %}
+            <div class="card" id="pdfContentCard">
+                <div class="card-header">
+                    <span><i class="ph-bold ph-tag"></i> Extracted Keywords</span>
+                    <div class="action-buttons" style="display: flex; gap: 12px; align-items: center;">
+                        <i class="ph-bold ph-file-pdf" style="cursor:pointer; color:#ef4444; font-size: 1.3rem;" onclick="exportToPDF()" title="Download PDF Report"></i>
+                        <i class="ph-bold ph-copy" style="cursor:pointer; color:var(--primary); font-size: 1.3rem;" onclick="copyKeywords()" title="Copy All"></i>
+                    </div>
+                </div>
+                
+                {% if is_categorized %}
+                    {% for category, kw_list in keywords.items() %}
+                        {% if kw_list %}
+                        <div class="category-group">
+                            <div class="category-title">{{ category }}</div>
+                            <div class="chip-container">
+                                {% for kw in kw_list %}
+                                <span class="chip" onclick="copySingleKeyword('{{ kw }}')">{{ kw }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <div class="chip-container">
+                        {% for kw in keywords %}
+                        <span class="chip" onclick="copySingleKeyword('{{ kw }}')">{{ kw }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        <div>&copy; 2026 AI Keyword Extractor PRO. All rights reserved.</div>
+        <div class="footer-links">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Documentation</a>
+        </div>
+    </footer>
+
+    <script>
+        // ----------------------------------------------------
+        // 🌙 ✨ NEW: DARK THEME LOGIC
+        // ----------------------------------------------------
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            const themeBtn = document.getElementById('themeBtn');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                if(themeBtn) themeBtn.innerHTML = '<i class="ph-bold ph-sun"></i>';
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            const themeBtn = document.getElementById('themeBtn');
+            if (isDark) {
+                localStorage.setItem('theme', 'dark');
+                if(themeBtn) themeBtn.innerHTML = '<i class="ph-bold ph-sun"></i>';
+                showToast("Dark Mode Activated");
+            } else {
+                localStorage.setItem('theme', 'light');
+                if(themeBtn) themeBtn.innerHTML = '<i class="ph-bold ph-moon"></i>';
+                showToast("Light Mode Activated");
+            }
+        }
+
+        // ----------------------------------------------------
+        // 🕰️ ✨ NEW: HISTORY/SIDEBAR LOGIC
+        // ----------------------------------------------------
+        const HISTORY_KEY = 'nlp_keyword_history';
+
+        function toggleSidebar(show) {
+            const sidebar = document.getElementById('historySidebar');
+            const overlay = document.getElementById('historyOverlay');
+            if (show) {
+                sidebar.classList.add('open');
+                overlay.classList.add('show');
+                renderHistory();
+            } else {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('show');
+            }
+        }
+
+        function saveCurrentExtraction() {
+            // Check if we just loaded a successful extraction result from the server
+            const resultCard = document.getElementById('pdfContentCard');
+            const sourceText = document.getElementById('sourceText').value.trim();
+            
+            if (resultCard && sourceText) {
+                let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+                const snippet = sourceText.substring(0, 70) + '...';
+                
+                // Prevent saving duplicates on simple page refresh
+                if (history.length === 0 || history[0].snippet !== snippet) {
+                    // Grab the raw HTML of the right panel so we can restore it exactly
+                    const rightPanelHTML = document.getElementById('rightPanel').innerHTML;
+                    
+                    history.unshift({
+                        id: Date.now(),
+                        date: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                        text: sourceText,
+                        snippet: snippet,
+                        html: rightPanelHTML
+                    });
+                    
+                    if (history.length > 10) history.pop(); // Keep last 10
+                    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+                }
+            }
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyContent');
+            let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+            
+            if (history.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color: var(--text-gray); margin-top: 2rem; font-weight:600;"><i class="ph-duotone ph-archive" style="font-size:3rem; opacity:0.3; margin-bottom:1rem; display:block;"></i>No recent extractions</div>';
+                return;
+            }
+            
+            container.innerHTML = history.map((item, index) => `
+                <div class="history-item" onclick="restoreHistory(${index})">
+                    <div class="hi-time">${item.date}</div>
+                    <div class="hi-text">${item.snippet}</div>
+                </div>
+            `).join('');
+        }
+
+        function restoreHistory(index) {
+            let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+            const item = history[index];
+            if(!item) return;
+            
+            // Turn off highlight if active
+            if (typeof isHighlighted !== 'undefined' && isHighlighted) toggleHighlight();
+            
+            document.getElementById('sourceText').value = item.text;
+            document.getElementById('rightPanel').innerHTML = item.html;
+            
+            toggleSidebar(false);
+            showToast("Session Restored!");
+        }
+
+        // Initialize Theme and History on Page Load
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            saveCurrentExtraction();
+        });
+
+        // ----------------------------------------------------
+        // 🧹 CLEAR TEXT LOGIC
+        // ----------------------------------------------------
+        function clearText() {
+            const textarea = document.getElementById('sourceText');
+            textarea.value = '';
+            
+            // If the text is currently highlighted, turn off highlight mode
+            if (typeof isHighlighted !== 'undefined' && isHighlighted) {
+                toggleHighlight();
+            }
+            
+            // Clear the highlight box content as well just to be safe
+            document.getElementById('highlightBox').innerHTML = '';
+            
+            // ✨ NEW: Clear the right panel and restore the empty state
+            const rightPanel = document.getElementById('rightPanel');
+            if (rightPanel) {
+                rightPanel.innerHTML = `
+                    <div class="empty-state">
+                        <i class="ph-duotone ph-article empty-icon"></i>
+                        <h3>Ready to Analyze</h3>
+                        <p>Select a language and paste text to begin.</p>
+                    </div>
+                `;
+            }
+            
+            showToast("Text and results cleared!");
+        }
+
+        // ----------------------------------------------------
+        // ✨ REPAIRED: SMART PDF TEXT EXTRACTOR
+        // ----------------------------------------------------
+        const pdfBtn = document.getElementById('pdfBtn');
+        const pdfInput = document.getElementById('pdfInput');
+
+        // Configure PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+
+        pdfBtn.addEventListener('click', () => {
+            pdfInput.click(); 
+        });
+
+        pdfInput.addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            if (file.type !== 'application/pdf') {
+                showToast("Please upload a valid PDF file.");
+                return;
+            }
+
+            pdfBtn.classList.add('loading');
+            pdfBtn.innerHTML = '<i class="ph-bold ph-spinner"></i>';
+            showToast("Reading PDF...");
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                
+                // Load PDF with full font and CMap support
+                const loadingTask = pdfjsLib.getDocument({ 
+                    data: arrayBuffer,
+                    cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
+                    cMapPacked: true,
+                    standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/',
+                    disableFontFace: false
+                });
+                
+                const pdf = await loadingTask.promise;
+                let fullText = '';
+
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    
+                    // ✨ THE FIX: A Smart Text Reconstructor
+                    let lines = {};
+                    const threshold = 8;
+
+                    for (const item of textContent.items) {
+                        const y = Math.round(item.transform[5] / threshold) * threshold;
+                        
+                        if (!lines[y]) lines[y] = [];
+                        
+                        lines[y].push({
+                            text: item.str,
+                            x: item.transform[4]
+                        });
+                    }
+
+                    // 🔥 SORT + JOIN PROPERLY
+                    let pageText = "";
+
+                    Object.keys(lines).sort((a,b) => b - a).forEach(y => {
+                        const line = lines[y];
+
+                        // sort left → right
+                        line.sort((a, b) => a.x - b.x);
+
+                        let lineText = "";
+
+                        for (let i = 0; i < line.length; i++) {
+                            let word = line[i].text;
+
+                            // clean junk
+                            word = word.replace(/\uFFFD/g, '').normalize("NFC");
+
+                            // 🔥 KEY FIX: intelligently join
+                            if (
+                                i > 0 &&
+                                !/[\s]/.test(word) &&
+                                !/[,.!?]/.test(word)
+                            ) {
+                                lineText += word;
+                            } else {
+                                lineText += " " + word;
+                            }
+                        }
+
+                        pageText += lineText.trim() + "\n";
+                    });
+
+                    // FINAL CLEAN
+                    pageText = pageText
+                        .replace(/\s+/g, ' ')
+                        .replace(/([ािीुूेैोौंः])\s+/g, '$1')
+                        .replace(/्\s+/g, '्')
+                        .trim();
+
+                    fullText += pageText + "\n\n";
+                }
+
+                if (fullText.trim() === '') {
+                    showToast("No text found in this PDF.");
+                } else {
+                    const textarea = document.getElementById('sourceText');
+                    if (typeof isHighlighted !== 'undefined' && isHighlighted) {
+                        toggleHighlight();
+                    }
+                    textarea.value = fullText;
+                    showToast("PDF text extracted successfully!");
+                }
+            } catch (error) {
+                console.error("Error reading PDF:", error);
+                showToast("Failed to extract text from PDF.");
+            } finally {
+                pdfBtn.classList.remove('loading');
+                pdfBtn.innerHTML = '<i class="ph-bold ph-file-pdf"></i>';
+                pdfInput.value = ''; // Reset input
+            }
+        });
+
+        // ----------------------------------------------------
+        // 🎤 VOICE RECOGNITION
+        // ----------------------------------------------------
+        const micBtn = document.getElementById('micBtn');
+        const sourceText = document.getElementById('sourceText');
+        let recognition;
+        let isListening = false;
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            
+            recognition.onstart = () => {
+                isListening = true;
+                micBtn.classList.add('listening');
+                micBtn.innerHTML = '<i class="ph-fill ph-microphone-stage"></i>';
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                micBtn.classList.remove('listening');
+                micBtn.innerHTML = '<i class="ph-bold ph-microphone"></i>';
+            };
+
+            recognition.onresult = (event) => {
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript + ' ';
+                    }
+                }
+                if(finalTranscript) sourceText.value += finalTranscript;
+            };
+        } else {
+            micBtn.style.display = 'none';
+        }
+
+        micBtn.addEventListener('click', () => {
+            if (!recognition) return;
+            if (isListening) {
+                recognition.stop();
+            } else {
+                const currentLang = document.getElementById('formLang').value;
+                recognition.lang = (currentLang === 'hi') ? 'hi-IN' : 'en-US';
+                recognition.start();
+            }
+        });
+
+        // ----------------------------------------------------
+        // 🔁 TRANSLATION LOGIC
+        // ----------------------------------------------------
+        const transBtn = document.getElementById('transBtn');
+        
+        transBtn.addEventListener('click', async () => {
+            const text = sourceText.value.trim();
+            const currentLang = document.getElementById('formLang').value;
+            
+            if (!text) {
+                showToast("Please enter text to translate");
+                return;
+            }
+
+            transBtn.classList.add('loading');
+            transBtn.innerHTML = '<i class="ph-bold ph-spinner"></i>';
+
+            try {
+                const response = await fetch('/translate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text, source_lang: currentLang })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    sourceText.value = data.translated_text;
+                    
+                    const targetLang = data.target_lang;
+                    if (targetLang === 'hi') {
+                        document.getElementById('lang-hi').click(); 
+                    } else {
+                        document.getElementById('lang-en').click(); 
+                    }
+                    
+                    setTimeout(() => { sourceText.value = data.translated_text; }, 210);
+                    showToast("Translated Successfully!");
+                } else {
+                    showToast("Translation Error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Network Error");
+            } finally {
+                transBtn.classList.remove('loading');
+                transBtn.innerHTML = '<i class="ph-bold ph-translate"></i>';
+            }
+        });
+
+        // ----------------------------------------------------
+        // ✨ HIGHLIGHTER LOGIC
+        // ----------------------------------------------------
+        let isHighlighted = false;
+
+        function toggleHighlight() {
+            const textarea = document.getElementById('sourceText');
+            const highlightBox = document.getElementById('highlightBox');
+            const highlightBtn = document.getElementById('highlightBtn');
+            
+            if (!isHighlighted) {
+                let content = textarea.value;
+                if (!content.trim()) {
+                    showToast("No text to highlight!");
+                    return;
+                }
+                
+                const chips = Array.from(document.querySelectorAll('.chip')).map(c => c.innerText);
+                if (chips.length === 0) {
+                    showToast("Please extract keywords first!");
+                    return;
+                }
+
+                chips.sort((a, b) => b.length - a.length);
+
+                chips.forEach(keyword => {
+                    const safeKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(`(${safeKeyword})`, 'gi');
+                    content = content.replace(regex, `<mark class="nlp-highlight">$1</mark>`);
+                });
+
+                highlightBox.innerHTML = content;
+                textarea.style.opacity = '0';
+                textarea.style.pointerEvents = 'none';
+                highlightBox.style.display = 'block';
+                
+                highlightBtn.style.color = 'var(--primary)';
+                highlightBtn.style.borderColor = 'var(--primary)';
+                highlightBtn.innerHTML = '<i class="ph-fill ph-highlighter"></i>';
+                isHighlighted = true;
+            } else {
+                textarea.style.opacity = '1';
+                textarea.style.pointerEvents = 'auto';
+                highlightBox.style.display = 'none';
+                
+                highlightBtn.style.color = 'var(--text-gray)';
+                highlightBtn.style.borderColor = 'var(--border-color)';
+                highlightBtn.innerHTML = '<i class="ph-bold ph-highlighter"></i>';
+                isHighlighted = false;
+            }
+        }
+
+        // ----------------------------------------------------
+        // 📄 PROFESSIONAL PDF EXPORT LOGIC
+        // ----------------------------------------------------
+        function exportToPDF() {
+            const allChips = document.querySelectorAll('.chip');
+            if (allChips.length === 0) {
+                showToast("No keywords to export!");
+                return;
+            }
+
+            showToast("Generating Professional PDF...");
+
+            // Get current date and time for the report header
+            const dateStr = new Date().toLocaleDateString('en-US', { 
+                year: 'numeric', month: 'short', day: 'numeric', 
+                hour: '2-digit', minute: '2-digit' 
+            });
+
+            let pdfHTML = `
+                <div style="padding: 50px 50px; font-family: 'Noto Sans Devanagari', 'Manrope', sans-serif; background: #ffffff; color: #0f172a; width: 100%; box-sizing: border-box; letter-spacing: normal;">
+                    
+                    <div style="border-bottom: 3px solid #4f46e5; padding-bottom: 20px; margin-bottom: 35px;">
+                        <table width="100%" style="border-collapse: collapse;">
+                            <tr>
+                                <td style="vertical-align: bottom;">
+                                    <div style="margin: 0; font-size: 26px; color: #1e293b; font-weight: 800;">Keyword Analysis Report</div>
+                                    <div style="margin: 6px 0 0 0; font-size: 13px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Premium AI Extraction</div>
+                                </td>
+                                <td style="text-align: right; vertical-align: bottom;">
+                                    <div style="font-size: 10px; color: #94a3b8; font-weight: 700; letter-spacing: 1px;">DATE GENERATED</div>
+                                    <div style="font-size: 13px; color: #475569; font-weight: 600; margin-top: 4px;">${dateStr}</div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+            `;
+
+            const categories = document.querySelectorAll('.category-group');
+            if (categories.length > 0) {
+                categories.forEach(group => {
+                    const title = group.querySelector('.category-title').innerText.replace(/[📅👤✨]/g, '').trim();
+                    pdfHTML += `
+                        <div style="margin-bottom: 30px; page-break-inside: avoid;">
+                            <div style="color: #4f46e5; font-size: 15px; margin: 0 0 15px 0; font-weight: 800; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; letter-spacing: normal;">
+                                ${title}
+                            </div>
+                            <div style="line-height: 2.2;">
+                    `;
+                    
+                    const chips = group.querySelectorAll('.chip');
+                    chips.forEach(chip => {
+                        pdfHTML += `<span style="display: inline-block; margin: 0 10px 10px 0; padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; font-size: 12px; font-weight: 600; color: #334155;">${chip.innerText}</span>`;
+                    });
+                    pdfHTML += `</div></div>`;
+                });
+            } else {
+                pdfHTML += `<div style="line-height: 2.2; margin-bottom: 30px;">`;
+                allChips.forEach(chip => {
+                    pdfHTML += `<span style="display: inline-block; margin: 0 10px 10px 0; padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; font-size: 12px; font-weight: 600; color: #334155;">${chip.innerText}</span>`;
+                });
+                pdfHTML += `</div>`;
+            }
+
+            // Report Footer
+            pdfHTML += `
+                    <div style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <table width="100%" style="border-collapse: collapse;">
+                            <tr>
+                                <td style="color: #94a3b8; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Confidential & Proprietary</td>
+                                <td style="text-align: right; color: #4f46e5; font-size: 12px; font-weight: 800;">AI Keyword Extractor PRO</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            const opt = {
+                margin:       0,
+                filename:     'AI_Keyword_Analysis_Report.pdf',
+                image:        { type: 'jpeg', quality: 1.0 },
+                html2canvas:  { scale: 3, useCORS: true }, 
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(pdfHTML).save().then(() => {
+                showToast("Professional PDF Downloaded!");
+            }).catch(err => {
+                console.error(err);
+                showToast("PDF Error. Check console.");
+            });
+        }
+
+        // ----------------------------------------------------
+        // ⚙️ UI LOGIC
+        // ----------------------------------------------------
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const msg = document.getElementById('toastMsg');
+            msg.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
+
+        function setLanguage(lang) {
+            document.getElementById('formLang').value = lang;
+            const title = document.getElementById('mainTitle');
+            const sub = document.getElementById('subTitle');
+            const textarea = document.getElementById('sourceText');
+            
+            if (isHighlighted) toggleHighlight();
+            
+            textarea.value = ''; 
+            
+            title.style.opacity = 0;
+            setTimeout(() => {
+                if (lang === 'hi') {
+                    title.innerText = "Hindi Keyword Extractor";
+                    sub.innerText = "Advanced NLP engine for extracting core topics from Devanagari text.";
+                    textarea.placeholder = "विश्लेषण के लिए यहाँ हिंदी टेक्स्ट पेस्ट करें...";
+                } else {
+                    title.innerText = "English Keyword Extractor";
+                    sub.innerText = "Extract core topics and nouns from English text with high precision.";
+                    textarea.placeholder = "Paste English text here for analysis...";
+                }
+                title.style.opacity = 1;
+            }, 200);
+        }
+
+        function validateAndSubmit(event) {
+            const textArea = document.getElementById('sourceText');
+            const clientError = document.getElementById('clientError');
+            const errorText = document.getElementById('errorText');
+            const btn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const loader = document.getElementById('loader');
+            const lang = document.getElementById('formLang').value;
+            
+            if (isHighlighted) toggleHighlight();
+            
+            const content = textArea.value.trim();
+            const hindiRegex = /[\u0900-\u097F]/;
+            const englishRegex = /[a-zA-Z]/;
+            
+            let valid = false;
+            let msg = "";
+
+            if (!content) {
+                msg = "Please enter some text first.";
+            } else if (lang === 'hi') {
+                if (hindiRegex.test(content)) valid = true;
+                else msg = "Please enter valid Hindi text (Devanagari).";
+            } else {
+                if (englishRegex.test(content)) valid = true;
+                else msg = "Please enter valid English text.";
+            }
+
+            if (!valid) {
+                event.preventDefault();
+                errorText.innerText = msg;
+                clientError.style.display = 'flex';
+                textArea.classList.add('shake');
+                setTimeout(() => { textArea.classList.remove('shake'); }, 500);
+                return false;
+            }
+
+            clientError.style.display = 'none';
+            btn.style.opacity = '0.9';
+            btn.style.cursor = 'wait';
+            btnText.style.display = 'none';
+            loader.style.display = 'inline-flex';
+            loader.style.gap = '8px';
+            return true;
+        }
+
+        function copyKeywords() {
+            const keywords = Array.from(document.querySelectorAll('.chip')).map(c => c.innerText).join(', ');
+            navigator.clipboard.writeText(keywords);
+            showToast("All keywords copied to clipboard!");
+        }
+        
+        function copySingleKeyword(text) {
+            navigator.clipboard.writeText(text);
+            showToast("Keyword copied: " + text);
+        }
+    </script>
+</body>
+</html>
